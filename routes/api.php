@@ -3,6 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\RadarEventController;
+use App\Http\Controllers\ApiController;
+use App\Http\Controllers\ServerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,3 +23,16 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('/store-event-data', [EventController::class, 'storeEventData']);
+Route::get('/store-event-data', [EventController::class, 'index']);
+Route::get('/device-names', [App\Http\Controllers\EventController::class, 'listDeviceNames']);
+
+Route::get('/randomNumber', [EventController::class, 'generateAndStoreRandomValue']);
+
+Route::post('/events', [RadarEventController::class, 'store']);
+Route::get('/events', [RadarEventController::class, 'index']);
+
+Route::post('/serverevents', [ServerController::class, 'store']);
+Route::get('/serverevents', [ServerController::class, 'index']);
+
+
+Route::post('/apiHit', [ApiController::class, 'ApiHit']);

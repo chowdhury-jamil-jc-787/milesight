@@ -3,29 +3,43 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Random;
+use Illuminate\Support\Facades\Http;
 
 class ApiController extends Controller
 {
-    public function handleNotification(Request $request)
+    public function ApiHit(Request $request)
     {
-        // Generate a random value
-        $randomValue = mt_rand(1000, 9999);
+        try {
+            // Extract JSON data from the request
+            $jsonData = $request->json()->all();
 
-        // Store the random value in the database (you should have a database table and model for this)
-        // Replace 'your_table_name' with your actual table name
-        Random::create(['random_column' => $randomValue]);
+            // Send the JSON data to the external API
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Cache-Control' => 'no-cache, private',
+                'X-RateLimit-Limit' => '60',
+                'X-RateLimit-Remaining' => '59',
+                'Access-Control-Allow-Origin' => '*',
+                'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers' => 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+                'Access-Control-Max-Age' => '3600',
+                'Upgrade' => 'h2,h2c',
+                'Connection' => 'Upgrade, Keep-Alive',
+                'Vary' => 'Accept-Encoding',
+                'Content-Encoding' => 'gzip',
+                'Keep-Alive' => 'timeout=5, max=75'
+            ])->post('https://milesight.trafficiot.com/api/store-event-data', $jsonData);
 
-        // Return a response (optional)
-        return response()->json(['message' => 'Random value stored successfully']);
-    }
+            // Check the response status and act accordingly
+            if ($response->successful()) {
+                return response()->json(['message' => 'JSON data received and sent successfully.'], 200);
+            } else {
+                return response()->json(['message' => 'Failed to send JSON data.', 'error' => $response->body()], $response->status());
+            }
 
-    public function handle(Request $request)
-    {
-        \Log::info('Received HTTP Notification:', $request->all());
-
-        // Your custom logic
-
-        return response('Notification handled successfully.');
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to decode JSON data.', 'error' => $e->getMessage()], 400);
+        }
     }
 }

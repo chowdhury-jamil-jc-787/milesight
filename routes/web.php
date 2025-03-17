@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
-use App\Http\Controllers\TrafficEventController;
+use App\Http\Controllers\EventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,8 +20,4 @@ Route::get('/', function () {
 });
 
 
-Route::get('/api/notification', [ApiController::class, 'handleNotification']);
-Route::get('/handle-http-notification', [ApiController::class, 'handle']);
 
-
-Route::post('/insert-data', [TrafficEventController::class, 'insertData']);
