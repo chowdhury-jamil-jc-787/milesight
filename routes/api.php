@@ -6,6 +6,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\RadarEventController;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\ServerController;
+use App\Http\Controllers\ValueController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,3 +37,6 @@ Route::get('/serverevents', [ServerController::class, 'index']);
 
 
 Route::post('/apiHit', [ApiController::class, 'ApiHit']);
+
+
+Route::apiResource('values', ValueController::class);
