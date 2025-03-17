@@ -1,0 +1,30 @@
+name: Deploy Laravel Project on push
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  web-deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
+      - name: Get the latest code
+        uses: actions/checkout@v2.7.0
+
+      - name: 📂 Sync files using FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.SERVER }}               # FTP/FTPS server address
+          username: ${{ secrets.USERNAME }}           # FTP username
+          password: ${{ secrets.PASSWORD }}           # FTP passwords
+          local-dir: ./                               # Local directory to upload
+          server-dir: /  # Remote directory
+          protocol: ftp                             # Use FTPS (not hS'FTP)
