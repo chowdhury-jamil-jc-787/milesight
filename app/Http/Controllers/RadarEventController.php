@@ -14,8 +14,16 @@ class RadarEventController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->get('per_page', 10); // Default to 10 items per page if not specified
-        $radarEvents = RadarEvent::orderBy('id', 'desc')->paginate($perPage);
-
+        $eventType = $request->get('event_type'); // Get event_type from query string
+    
+        $query = RadarEvent::query();
+    
+        if ($eventType && in_array($eventType, ['error', 'event'])) {
+            $query->where('event_type', $eventType);
+        }
+    
+        $radarEvents = $query->orderBy('id', 'desc')->paginate($perPage);
+    
         return response()->json([
             'count' => $radarEvents->total(),
             'next' => $radarEvents->nextPageUrl(),
@@ -23,6 +31,7 @@ class RadarEventController extends Controller
             'results' => $radarEvents->items(),
         ]);
     }
+    
 
     /**
      * Show the form for creating a new resource.
