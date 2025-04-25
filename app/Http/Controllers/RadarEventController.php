@@ -112,6 +112,19 @@ class RadarEventController extends Controller
      */
     public function destroy(RadarEvent $radarEvent)
     {
-        //
+        try {
+            $radarEvent->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Radar event deleted successfully.',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete the radar event.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

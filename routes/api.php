@@ -31,6 +31,7 @@ Route::get('/randomNumber', [EventController::class, 'generateAndStoreRandomValu
 
 Route::post('/events', [RadarEventController::class, 'store']);
 Route::get('/events', [RadarEventController::class, 'index']);
+Route::delete('/events/{radarEvent}', [RadarEventController::class, 'destroy']);
 
 Route::post('/serverevents', [ServerController::class, 'store']);
 Route::get('/serverevents', [ServerController::class, 'index']);
