@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\RadarEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class RadarEventController extends Controller
 {
@@ -51,11 +50,7 @@ class RadarEventController extends Controller
             'device_name' => 'required|string|max:255',
             'event_type' => 'required|string|max:255',
             'event_desc' => 'required|string',
-            'time_stamp' => [
-                'required',
-                'date_format:Y-m-d H:i:s',
-                Rule::unique('radar_events', 'time_stamp'),
-            ],
+            'time_stamp' => 'required|date_format:Y-m-d H:i:s',
         ], [
             'device_name.required' => 'The device name field is required.',
             'device_name.string' => 'The device name must be a string.',
@@ -67,7 +62,6 @@ class RadarEventController extends Controller
             'event_desc.string' => 'The event description must be a string.',
             'time_stamp.required' => 'The time stamp field is required.',
             'time_stamp.date_format' => 'The time stamp does not match the format Y-m-d H:i:s.',
-            'time_stamp.unique' => 'The time stamp has already been used.',
         ]);
 
         if ($validator->fails()) {
@@ -78,23 +72,13 @@ class RadarEventController extends Controller
             ], 422);
         }
 
-        try {
-            $radarEvent = RadarEvent::create($request->all());
+        $radarEvent = RadarEvent::create($request->all());
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Radar event created successfully',
-                'data' => $radarEvent
-            ], 201);
-
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Handle rare case where DB unique constraint fails despite validation
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Duplicate time stamp entry not allowed.',
-                'error' => $e->getMessage()
-            ], 409);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Radar event created successfully',
+            'data' => $radarEvent
+        ], 201);
     }
 
     
