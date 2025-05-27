@@ -12,39 +12,50 @@ class RadarEventController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-    {
-        $perPage = $request->get('per_page', 10);
-        $eventType = $request->get('event_type');
-        $deviceNameSearch = $request->get('device_name');
-        $onlyDeviceName = filter_var($request->get('only_device_name'), FILTER_VALIDATE_BOOLEAN);
-    
-        $query = RadarEvent::query();
-    
-        if ($eventType) {
-            $query->where('event_type', $eventType);
-        }
-    
-        if ($deviceNameSearch) {
-            $query->where('device_name', 'LIKE', '%' . $deviceNameSearch . '%');
-        }
-    
-        if ($onlyDeviceName) {
-            $query->select('device_name');
-        }
-    
-        $radarEvents = $query->orderBy('id', 'desc')->paginate($perPage);
-    
-        $results = $onlyDeviceName 
-            ? $radarEvents->pluck('device_name')->all()
-            : $radarEvents->items();
-    
-        return response()->json([
-            'count' => $radarEvents->total(),
-            'next' => $radarEvents->nextPageUrl(),
-            'previous' => $radarEvents->previousPageUrl(),
-            'results' => $results,
-        ]);
+{
+    $perPage = $request->get('per_page', 10);
+    $eventTypeFilter = $request->get('event_type');
+    $deviceNameSearch = $request->get('device_name');
+    $onlyDeviceName = filter_var($request->get('only_device_name'), FILTER_VALIDATE_BOOLEAN);
+    $onlyEventType = filter_var($request->get('only_event_type'), FILTER_VALIDATE_BOOLEAN);
+
+    $query = RadarEvent::query();
+
+    if ($eventTypeFilter) {
+        $query->where('event_type', $eventTypeFilter);
     }
+
+    if ($deviceNameSearch) {
+        $query->where('device_name', 'LIKE', '%' . $deviceNameSearch . '%');
+    }
+
+    // Decide which column(s) to select based on query params
+    if ($onlyDeviceName) {
+        $query->select('device_name');
+    } elseif ($onlyEventType) {
+        $query->select('event_type');
+    }
+    // else select all columns by default
+
+    $radarEvents = $query->orderBy('id', 'desc')->paginate($perPage);
+
+    // Format results to a simple array of values if only one column selected
+    if ($onlyDeviceName) {
+        $results = $radarEvents->pluck('device_name')->all();
+    } elseif ($onlyEventType) {
+        $results = $radarEvents->pluck('event_type')->all();
+    } else {
+        $results = $radarEvents->items();
+    }
+
+    return response()->json([
+        'count' => $radarEvents->total(),
+        'next' => $radarEvents->nextPageUrl(),
+        'previous' => $radarEvents->previousPageUrl(),
+        'results' => $results,
+    ]);
+}
+
     
 
     
