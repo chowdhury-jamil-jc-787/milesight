@@ -12,40 +12,40 @@ class RadarEventController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-{
-    $perPage = $request->get('per_page', 10);
-    $eventType = $request->get('event_type');
-    $deviceNameSearch = $request->get('device_name');
-    $onlyDeviceName = filter_var($request->get('only_device_name'), FILTER_VALIDATE_BOOLEAN);
-
-    $query = RadarEvent::query();
-
-    if ($eventType && in_array($eventType, ['error', 'event'])) {
-        $query->where('event_type', $eventType);
+    {
+        $perPage = $request->get('per_page', 10);
+        $eventType = $request->get('event_type');
+        $deviceNameSearch = $request->get('device_name');
+        $onlyDeviceName = filter_var($request->get('only_device_name'), FILTER_VALIDATE_BOOLEAN);
+    
+        $query = RadarEvent::query();
+    
+        if ($eventType) {
+            $query->where('event_type', $eventType);
+        }
+    
+        if ($deviceNameSearch) {
+            $query->where('device_name', 'LIKE', '%' . $deviceNameSearch . '%');
+        }
+    
+        if ($onlyDeviceName) {
+            $query->select('device_name');
+        }
+    
+        $radarEvents = $query->orderBy('id', 'desc')->paginate($perPage);
+    
+        $results = $onlyDeviceName 
+            ? $radarEvents->pluck('device_name')->all()
+            : $radarEvents->items();
+    
+        return response()->json([
+            'count' => $radarEvents->total(),
+            'next' => $radarEvents->nextPageUrl(),
+            'previous' => $radarEvents->previousPageUrl(),
+            'results' => $results,
+        ]);
     }
-
-    if ($deviceNameSearch) {
-        $query->where('device_name', 'LIKE', '%' . $deviceNameSearch . '%');
-    }
-
-    if ($onlyDeviceName) {
-        $query->select('device_name');
-    }
-
-    $radarEvents = $query->orderBy('id', 'desc')->paginate($perPage);
-
-    // Format the results differently based on $onlyDeviceName
-    $results = $onlyDeviceName 
-        ? $radarEvents->pluck('device_name')->all()  // return simple array of device names
-        : $radarEvents->items();                      // return full event data
-
-    return response()->json([
-        'count' => $radarEvents->total(),
-        'next' => $radarEvents->nextPageUrl(),
-        'previous' => $radarEvents->previousPageUrl(),
-        'results' => $results,
-    ]);
-}
+    
 
     
     
