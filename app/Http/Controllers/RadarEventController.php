@@ -63,7 +63,7 @@ class RadarEventController extends Controller
             'time_stamp.required' => 'The time stamp field is required.',
             'time_stamp.date_format' => 'The time stamp does not match the format Y-m-d H:i:s.',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
@@ -71,15 +71,28 @@ class RadarEventController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-
+    
+        // Check if an event with the same time_stamp and event_type exists
+        $exists = RadarEvent::where('time_stamp', $request->time_stamp)
+                            ->where('event_type', $request->event_type)
+                            ->exists();
+    
+        if ($exists) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An event with the same time stamp and event type already exists.'
+            ], 409);  // 409 Conflict
+        }
+    
         $radarEvent = RadarEvent::create($request->all());
-
+    
         return response()->json([
             'status' => 'success',
             'message' => 'Radar event created successfully',
             'data' => $radarEvent
         ], 201);
     }
+    
 
     
 
