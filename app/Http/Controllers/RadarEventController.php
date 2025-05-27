@@ -13,14 +13,22 @@ class RadarEventController extends Controller
      */
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 10); // Default to 10 items per page if not specified
-        $eventType = $request->get('event_type'); // Get event_type from query string
+        $perPage = $request->get('per_page', 10);
+        $eventType = $request->get('event_type');
+        $deviceNameSearch = $request->get('device_name');
     
         $query = RadarEvent::query();
     
         if ($eventType && in_array($eventType, ['error', 'event'])) {
             $query->where('event_type', $eventType);
         }
+    
+        if ($deviceNameSearch) {
+            $query->where('device_name', 'LIKE', '%' . $deviceNameSearch . '%');
+        }
+    
+        // Select only device_name column
+        $query->select('device_name');
     
         $radarEvents = $query->orderBy('id', 'desc')->paginate($perPage);
     
@@ -31,6 +39,7 @@ class RadarEventController extends Controller
             'results' => $radarEvents->items(),
         ]);
     }
+    
     
 
     /**
