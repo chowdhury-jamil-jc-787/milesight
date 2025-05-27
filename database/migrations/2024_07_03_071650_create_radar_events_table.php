@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('device_name');
             $table->string('event_type');
             $table->text('event_desc');
-            $table->timestamp('time_stamp');
+            $table->timestamp('time_stamp')->unique();
             $table->timestamps();
         });
     }
