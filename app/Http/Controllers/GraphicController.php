@@ -13,61 +13,76 @@ class GraphicController extends Controller
     /**
      * GET /graphics
      */
-    public function index(\Illuminate\Http\Request $request)
-    {
-        $q = \App\Models\Graphic::query();
-
-        // --- filters ---
-        if ($request->filled('device_name')) {
-            $q->where('device_name', 'like', '%'.$request->string('device_name').'%');
-        }
-
-        if ($request->filled('voltage')) {
-            $q->where('voltage', $request->input('voltage'));
-        } else {
-            if ($request->filled('voltage_min')) $q->where('voltage', '>=', $request->input('voltage_min'));
-            if ($request->filled('voltage_max')) $q->where('voltage', '<=', $request->input('voltage_max'));
-        }
-
-        if ($request->filled('time')) {
-            $q->where('time', $request->input('time'));
-        } else {
-            if ($request->filled('time_from')) $q->where('time', '>=', $request->input('time_from'));
-            if ($request->filled('time_to'))   $q->where('time', '<=', $request->input('time_to'));
-        }
-
-        if ($request->filled('created_from')) {
-            $q->where('created_at', '>=', \Carbon\Carbon::parse($request->input('created_from')));
-        }
-        if ($request->filled('created_to')) {
-            $createdTo = \Carbon\Carbon::parse($request->input('created_to'));
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->input('created_to'))) {
-                $createdTo = $createdTo->endOfDay();
-            }
-            $q->where('created_at', '<=', $createdTo);
-        }
-        // --------------
-
-        $q->orderByDesc('id');
-
-        $paginated = $q->paginate(10);
-
-        // Force "result" to be a numerically indexed array ([] when empty)
-        $result = $paginated->getCollection()->values()->all();
+public function index(\Illuminate\Http\Request $request)
+{
+    // If ?device=true then return only distinct device names
+    if ($request->boolean('device')) {
+        $devices = \App\Models\Graphic::query()
+            ->select('device_name')
+            ->distinct()
+            ->orderBy('device_name')
+            ->pluck('device_name')
+            ->values();
 
         return response()->json([
-            'count' => $paginated->total(),
-            'pagination' => [
-                'current_page' => $paginated->currentPage(),
-                'per_page'     => $paginated->perPage(),
-                'total'        => $paginated->total(),
-                'last_page'    => $paginated->lastPage(),
-                'from'         => $paginated->firstItem(),
-                'to'           => $paginated->lastItem(),
-            ],
-            'result' => $result, // <- always an array; [] when no rows
+            'count'  => $devices->count(),
+            'result' => $devices,
         ]);
     }
+
+    // --- normal filters ---
+    $q = \App\Models\Graphic::query();
+
+    if ($request->filled('device_name')) {
+        $q->where('device_name', 'like', '%'.$request->string('device_name').'%');
+    }
+
+    if ($request->filled('voltage')) {
+        $q->where('voltage', $request->input('voltage'));
+    } else {
+        if ($request->filled('voltage_min')) $q->where('voltage', '>=', $request->input('voltage_min'));
+        if ($request->filled('voltage_max')) $q->where('voltage', '<=', $request->input('voltage_max'));
+    }
+
+    if ($request->filled('time')) {
+        $q->where('time', $request->input('time'));
+    } else {
+        if ($request->filled('time_from')) $q->where('time', '>=', $request->input('time_from'));
+        if ($request->filled('time_to'))   $q->where('time', '<=', $request->input('time_to'));
+    }
+
+    if ($request->filled('created_from')) {
+        $q->where('created_at', '>=', \Carbon\Carbon::parse($request->input('created_from')));
+    }
+    if ($request->filled('created_to')) {
+        $createdTo = \Carbon\Carbon::parse($request->input('created_to'));
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->input('created_to'))) {
+            $createdTo = $createdTo->endOfDay();
+        }
+        $q->where('created_at', '<=', $createdTo);
+    }
+    // ----------------------
+
+    $q->orderByDesc('id');
+
+    $paginated = $q->paginate(10);
+
+    $result = $paginated->getCollection()->values()->all();
+
+    return response()->json([
+        'count' => $paginated->total(),
+        'pagination' => [
+            'current_page' => $paginated->currentPage(),
+            'per_page'     => $paginated->perPage(),
+            'total'        => $paginated->total(),
+            'last_page'    => $paginated->lastPage(),
+            'from'         => $paginated->firstItem(),
+            'to'           => $paginated->lastItem(),
+        ],
+        'result' => $result,
+    ]);
+}
+
 
 
     /**
