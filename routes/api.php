@@ -7,6 +7,7 @@ use App\Http\Controllers\RadarEventController;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\ServerController;
 use App\Http\Controllers\ValueController;
+use App\Http\Controllers\GraphicController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,3 +42,6 @@ Route::post('/apiHit', [ApiController::class, 'ApiHit']);
 
 
 Route::apiResource('values', ValueController::class);
+
+Route::get('graphics/chart', [GraphicController::class, 'chart']);
+Route::resource('graphics', GraphicController::class);
