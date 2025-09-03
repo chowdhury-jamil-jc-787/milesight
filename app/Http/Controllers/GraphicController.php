@@ -7,81 +7,82 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class GraphicController extends Controller
 {
     /**
      * GET /graphics
      */
-public function index(\Illuminate\Http\Request $request)
-{
-    // If ?device=true then return only distinct device names
-    if ($request->boolean('device')) {
-        $devices = \App\Models\Graphic::query()
-            ->select('device_name')
-            ->distinct()
-            ->orderBy('device_name')
-            ->pluck('device_name')
-            ->values();
+    public function index(\Illuminate\Http\Request $request)
+    {
+        // If ?device=true then return only distinct device names
+        if ($request->boolean('device')) {
+            $devices = \App\Models\Graphic::query()
+                ->select('device_name')
+                ->distinct()
+                ->orderBy('device_name')
+                ->pluck('device_name')
+                ->values();
+
+            return response()->json([
+                'count'  => $devices->count(),
+                'result' => $devices,
+            ]);
+        }
+
+        // --- normal filters ---
+        $q = \App\Models\Graphic::query();
+
+        if ($request->filled('device_name')) {
+            $q->where('device_name', 'like', '%'.$request->string('device_name').'%');
+        }
+
+        if ($request->filled('voltage')) {
+            $q->where('voltage', $request->input('voltage'));
+        } else {
+            if ($request->filled('voltage_min')) $q->where('voltage', '>=', $request->input('voltage_min'));
+            if ($request->filled('voltage_max')) $q->where('voltage', '<=', $request->input('voltage_max'));
+        }
+
+        if ($request->filled('time')) {
+            $q->where('time', $request->input('time'));
+        } else {
+            if ($request->filled('time_from')) $q->where('time', '>=', $request->input('time_from'));
+            if ($request->filled('time_to'))   $q->where('time', '<=', $request->input('time_to'));
+        }
+
+        if ($request->filled('created_from')) {
+            $q->where('created_at', '>=', \Carbon\Carbon::parse($request->input('created_from')));
+        }
+        if ($request->filled('created_to')) {
+            $createdTo = \Carbon\Carbon::parse($request->input('created_to'));
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->input('created_to'))) {
+                $createdTo = $createdTo->endOfDay();
+            }
+            $q->where('created_at', '<=', $createdTo);
+        }
+        // ----------------------
+
+        $q->orderByDesc('id');
+
+        $paginated = $q->paginate(10);
+
+        $result = $paginated->getCollection()->values()->all();
 
         return response()->json([
-            'count'  => $devices->count(),
-            'result' => $devices,
+            'count' => $paginated->total(),
+            'pagination' => [
+                'current_page' => $paginated->currentPage(),
+                'per_page'     => $paginated->perPage(),
+                'total'        => $paginated->total(),
+                'last_page'    => $paginated->lastPage(),
+                'from'         => $paginated->firstItem(),
+                'to'           => $paginated->lastItem(),
+            ],
+            'result' => $result,
         ]);
     }
-
-    // --- normal filters ---
-    $q = \App\Models\Graphic::query();
-
-    if ($request->filled('device_name')) {
-        $q->where('device_name', 'like', '%'.$request->string('device_name').'%');
-    }
-
-    if ($request->filled('voltage')) {
-        $q->where('voltage', $request->input('voltage'));
-    } else {
-        if ($request->filled('voltage_min')) $q->where('voltage', '>=', $request->input('voltage_min'));
-        if ($request->filled('voltage_max')) $q->where('voltage', '<=', $request->input('voltage_max'));
-    }
-
-    if ($request->filled('time')) {
-        $q->where('time', $request->input('time'));
-    } else {
-        if ($request->filled('time_from')) $q->where('time', '>=', $request->input('time_from'));
-        if ($request->filled('time_to'))   $q->where('time', '<=', $request->input('time_to'));
-    }
-
-    if ($request->filled('created_from')) {
-        $q->where('created_at', '>=', \Carbon\Carbon::parse($request->input('created_from')));
-    }
-    if ($request->filled('created_to')) {
-        $createdTo = \Carbon\Carbon::parse($request->input('created_to'));
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->input('created_to'))) {
-            $createdTo = $createdTo->endOfDay();
-        }
-        $q->where('created_at', '<=', $createdTo);
-    }
-    // ----------------------
-
-    $q->orderByDesc('id');
-
-    $paginated = $q->paginate(10);
-
-    $result = $paginated->getCollection()->values()->all();
-
-    return response()->json([
-        'count' => $paginated->total(),
-        'pagination' => [
-            'current_page' => $paginated->currentPage(),
-            'per_page'     => $paginated->perPage(),
-            'total'        => $paginated->total(),
-            'last_page'    => $paginated->lastPage(),
-            'from'         => $paginated->firstItem(),
-            'to'           => $paginated->lastItem(),
-        ],
-        'result' => $result,
-    ]);
-}
 
 
 
@@ -90,19 +91,49 @@ public function index(\Illuminate\Http\Request $request)
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'device_name'  => ['required', 'string', 'max:255'],
-            'voltage'      => ['required', 'numeric'],
-            'recorded_at'  => ['required', 'date'], // accepts ISO 8601 or "Y-m-d H:i:s"
-        ]);
+        try {
+            $validated = $request->validate([
+                'device_name'  => ['required', 'string', 'max:255'],
+                'voltage'      => ['required', 'numeric'],
+                'recorded_at'  => ['required', 'date'], // ISO8601 or "Y-m-d H:i:s"
+            ]);
 
-        // Normalize to "Y-m-d H:i:s" for the DB
-        $validated['recorded_at'] = Carbon::parse($validated['recorded_at'])->format('Y-m-d H:i:s');
+            // Normalize date
+            $validated['recorded_at'] = Carbon::parse($validated['recorded_at'])->format('Y-m-d H:i:s');
 
-        $graphic = Graphic::create($validated);
+            // Attempt insert
+            $graphic = Graphic::create($validated);
 
-        return response()->json($graphic, 201);
-    }
+            if (!$graphic || !$graphic->id) {
+                Log::error('Graphic insert failed', [
+                    'validated' => $validated,
+                    'graphic'   => $graphic,
+                ]);
+
+                return response()->json([
+                    'message' => 'Failed to insert record. Please try again.',
+                    'data'    => $validated,
+                ], 500);
+            }
+
+            return response()->json([
+                'message' => 'Graphic created successfully',
+                'data'    => $graphic,
+            ], 201);
+
+        } catch (\Throwable $e) {
+            Log::error('Exception while inserting Graphic', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'input' => $request->all(),
+            ]);
+
+            return response()->json([
+                'message' => 'Error occurred while saving graphic',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+}
 
     /**
      * GET /graphics/{graphic}
