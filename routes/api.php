@@ -8,6 +8,8 @@ use App\Http\Controllers\ApiController;
 use App\Http\Controllers\ServerController;
 use App\Http\Controllers\ValueController;
 use App\Http\Controllers\GraphicController;
+use App\Http\Controllers\LogFileUploadController;
+use App\Http\Controllers\LidarEventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +36,10 @@ Route::post('/events', [RadarEventController::class, 'store']);
 Route::get('/events', [RadarEventController::class, 'index']);
 Route::delete('/events/{radarEvent}', [RadarEventController::class, 'destroy']);
 
+Route::post('/lidar-events', [LidarEventController::class, 'store']);
+Route::get('/lidar-events', [LidarEventController::class, 'index']);
+Route::delete('/lidar-events/{lidarEvent}', [LidarEventController::class, 'destroy']);
+
 Route::post('/serverevents', [ServerController::class, 'store']);
 Route::get('/serverevents', [ServerController::class, 'index']);
 
@@ -45,3 +51,5 @@ Route::apiResource('values', ValueController::class);
 
 Route::get('graphics/chart', [GraphicController::class, 'chart']);
 Route::resource('graphics', GraphicController::class);
+
+Route::apiResource('logfiles', LogFileUploadController::class);
