@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class UpdateVehicleRecordRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'serial' => ['sometimes','required','string','max:255'],
+            'device_name' => ['sometimes','required','string','max:255'],
+            'captured_at' => ['sometimes','required','date'],
+            'license_plate_no' => ['sometimes','required','string','max:255'],
+            'vehicle_height' => ['nullable','numeric'],
+            'vehicle_snapshot' => ['nullable','string'],
+        ];
+    }
+}

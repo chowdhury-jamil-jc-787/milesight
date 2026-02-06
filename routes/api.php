@@ -10,6 +10,7 @@ use App\Http\Controllers\ValueController;
 use App\Http\Controllers\GraphicController;
 use App\Http\Controllers\LogFileUploadController;
 use App\Http\Controllers\LidarEventController;
+use App\Http\Controllers\Api\VehicleRecordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,3 +54,6 @@ Route::get('graphics/chart', [GraphicController::class, 'chart']);
 Route::resource('graphics', GraphicController::class);
 
 Route::apiResource('logfiles', LogFileUploadController::class);
+
+
+Route::apiResource('vehicle-records', VehicleRecordController::class);
