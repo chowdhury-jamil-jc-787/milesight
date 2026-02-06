@@ -22,7 +22,7 @@ class StoreVehicleRecordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'serial' => ['required','string','max:255'],
+            'serial' => ['string','max:255'],
             'device_name' => ['required','string','max:255'],
             'captured_at' => ['required','date'], // e.g. 2026-02-05 12:34:56
             'license_plate_no' => ['required','string','max:255'],

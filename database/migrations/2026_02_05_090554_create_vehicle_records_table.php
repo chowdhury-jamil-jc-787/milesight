@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('vehicle_records', function (Blueprint $table) {
             $table->id();
 
-            $table->string('serial')->index();
+            $table->string('serial')->nullable()->index();
             $table->string('device_name')->index();
 
             // Your "Timestamp" column (avoid naming it exactly "timestamp" because it's a reserved-ish word)
