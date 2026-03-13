@@ -11,6 +11,7 @@ use App\Http\Controllers\GraphicController;
 use App\Http\Controllers\LogFileUploadController;
 use App\Http\Controllers\LidarEventController;
 use App\Http\Controllers\Api\VehicleRecordController;
+use App\Http\Controllers\Api\VehicleCountController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,3 +58,11 @@ Route::apiResource('logfiles', LogFileUploadController::class);
 
 
 Route::apiResource('vehicle-records', VehicleRecordController::class);
+
+
+Route::prefix('vehicle-counts')->group(function () {
+    Route::post('/save', [VehicleCountController::class, 'saveOrUpdate']);
+    Route::get('/', [VehicleCountController::class, 'index']);
+    Route::get('/{vehicleCount}', [VehicleCountController::class, 'show']);
+    Route::delete('/{vehicleCount}', [VehicleCountController::class, 'destroy']);
+});
