@@ -10,6 +10,7 @@ use App\Http\Controllers\ValueController;
 use App\Http\Controllers\GraphicController;
 use App\Http\Controllers\LogFileUploadController;
 use App\Http\Controllers\LidarEventController;
+use App\Http\Controllers\LidarEvent2Controller;
 use App\Http\Controllers\Api\VehicleRecordController;
 use App\Http\Controllers\Api\VehicleCountController;
 
@@ -41,6 +42,10 @@ Route::delete('/events/{radarEvent}', [RadarEventController::class, 'destroy']);
 Route::post('/lidar-events', [LidarEventController::class, 'store']);
 Route::get('/lidar-events', [LidarEventController::class, 'index']);
 Route::delete('/lidar-events/{lidarEvent}', [LidarEventController::class, 'destroy']);
+
+Route::post('/lidar-events2', [LidarEvent2Controller::class, 'store']);
+Route::get('/lidar-events2', [LidarEvent2Controller::class, 'index']);
+Route::delete('/lidar-events2/{lidarEvent}', [LidarEvent2Controller::class, 'destroy']);
 
 Route::post('/serverevents', [ServerController::class, 'store']);
 Route::get('/serverevents', [ServerController::class, 'index']);
