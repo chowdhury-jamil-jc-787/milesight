@@ -75,22 +75,11 @@ class RadarEventController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'device_name' => 'required|string|max:255',
-            'event_type' => 'required|string|max:255',
-            'event_desc' => 'required|string',
-            'time_stamp' => 'required|date_format:Y-m-d H:i:s',
-        ], [
-            'device_name.required' => 'The device name field is required.',
-            'device_name.string' => 'The device name must be a string.',
-            'device_name.max' => 'The device name may not be greater than 255 characters.',
-            'event_type.required' => 'The event type field is required.',
-            'event_type.string' => 'The event type must be a string.',
-            'event_type.max' => 'The event type may not be greater than 255 characters.',
-            'event_desc.required' => 'The event description field is required.',
-            'event_desc.string' => 'The event description must be a string.',
-            'time_stamp.required' => 'The time stamp field is required.',
-            'time_stamp.date_format' => 'The time stamp does not match the format Y-m-d H:i:s.',
+            'event_type'  => 'required|string|max:255',
+            'event_desc'  => 'required|string',
+            'time_stamp'  => 'required|date_format:Y-m-d H:i:s',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
@@ -98,28 +87,21 @@ class RadarEventController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-    
-        // Check if an event with the same time_stamp and event_type exists
-        $exists = RadarEvent::where('time_stamp', $request->time_stamp)
-                            ->where('event_type', $request->event_type)
-                            ->exists();
-    
-        if ($exists) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'An event with the same time stamp and event type already exists.'
-            ], 409);  // 409 Conflict
-        }
-    
-        $radarEvent = RadarEvent::create($request->all());
-    
+
+        $radarEvent = RadarEvent::create([
+            'device_name' => $request->device_name,
+            'event_type'  => $request->event_type,
+            'event_desc'  => $request->event_desc,
+            'time_stamp'  => $request->time_stamp,
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Radar event created successfully',
             'data' => $radarEvent
         ], 201);
     }
-    
+        
 
     
 
