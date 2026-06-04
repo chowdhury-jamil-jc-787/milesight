@@ -13,6 +13,7 @@ use App\Http\Controllers\LidarEventController;
 use App\Http\Controllers\LidarEvent2Controller;
 use App\Http\Controllers\Api\VehicleRecordController;
 use App\Http\Controllers\Api\VehicleCountController;
+use App\Http\Controllers\CmsEventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,3 +72,6 @@ Route::prefix('vehicle-counts')->group(function () {
     Route::get('/{vehicleCount}', [VehicleCountController::class, 'show']);
     Route::delete('/{vehicleCount}', [VehicleCountController::class, 'destroy']);
 });
+
+
+Route::apiResource('cms-events', CmsEventController::class);
